@@ -1,0 +1,185 @@
+/* ==========================================================================
+   CloudBox – Design System exported from Google Stitch
+   Fonts: Geist, JetBrains Mono, Material Symbols Outlined
+   Palette: Material 3 / Modern Kinetic Vault Theme
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap');
+
+:root {
+  --primary: #004ac6;
+  --primary-container: #2563eb;
+  --background: #faf8ff;
+  --surface: #faf8ff;
+  --surface-lowest: #ffffff;
+  --surface-low: #f2f3ff;
+  --surface-container: #eaedff;
+  --surface-high: #e2e7ff;
+  --on-surface: #131b2e;
+  --outline: #737686;
+  --outline-variant: #c3c6d7;
+  --error: #ba1a1a;
+  --success: #059669;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Geist', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--background);
+  color: var(--on-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Material Symbols configuration */
+.material-symbols-outlined {
+  font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+  font-size: 20px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  vertical-align: middle;
+}
+
+.material-symbols-fill {
+  font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 20;
+}
+
+/* Custom Minimal Scrollbar */
+.custom-scroll::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.custom-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scroll::-webkit-scrollbar-thumb {
+  background: #c3c6d7;
+  border-radius: 9999px;
+}
+.custom-scroll::-webkit-scrollbar-thumb:hover {
+  background: #737686;
+}
+
+/* Focus styles for keyboard accessibility */
+:focus-visible {
+  outline: 2px solid var(--primary-container);
+  outline-offset: 2px;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* Drawer transitions */
+#file-detail-drawer {
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+}
+
+#file-detail-drawer.collapsed {
+  transform: translateX(100%);
+  display: none !important;
+}
+
+/* Modals */
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(19, 27, 46, 0.48);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 100;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+
+.modal-backdrop.active {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.modal-dialog {
+  background: #ffffff;
+  border: 1px solid var(--outline-variant);
+  border-radius: 14px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  width: 100%;
+  max-width: 460px;
+  padding: 24px;
+  transform: scale(0.96);
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-backdrop.active .modal-dialog {
+  transform: scale(1);
+}
+
+/* Shimmer animation for loading skeletons */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #eaedff 25%, #dae2fd 50%, #eaedff 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Toast Notifications */
+#toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+.stitch-toast {
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #ffffff;
+  border: 1px solid var(--outline-variant);
+  padding: 12px 18px;
+  border-radius: 12px;
+  box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.12);
+  font-size: 13px;
+  color: var(--on-surface);
+  min-width: 300px;
+  max-width: 440px;
+  animation: toastSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.stitch-toast.hiding {
+  opacity: 0;
+  transform: translateY(12px);
+}
+
+.stitch-toast.success { border-left: 4px solid var(--success); }
+.stitch-toast.error { border-left: 4px solid var(--error); }
+.stitch-toast.warning { border-left: 4px solid #f59e0b; }
+.stitch-toast.info { border-left: 4px solid var(--primary-container); }
+
+@keyframes toastSlideIn {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

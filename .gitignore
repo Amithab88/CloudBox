@@ -1,0 +1,6 @@
+node_modules/
+.firebase/
+firebase-debug.log*
+.agents/
+.DS_Store
+Thumbs.db

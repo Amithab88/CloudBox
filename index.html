@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>CloudBox — Personal Cloud Storage</title>
+  <meta name="description" content="CloudBox — Personal Cloud Storage with Firebase Web SDK v10 and Google Stitch UI/UX design."/>
+  
+  <!-- Google Fonts: Geist, JetBrains Mono, Material Symbols Outlined -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin=""/>
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+  
+  <!-- Tailwind CSS via CDN with Google Stitch Design Tokens -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#004ac6",
+            "primary-container": "#2563eb",
+            "on-primary": "#ffffff",
+            "on-primary-container": "#eeefff",
+            "secondary": "#0058be",
+            "secondary-container": "#2170e4",
+            "tertiary": "#006058",
+            "tertiary-container": "#007b71",
+            "background": "#faf8ff",
+            "surface": "#faf8ff",
+            "surface-container-lowest": "#ffffff",
+            "surface-container-low": "#f2f3ff",
+            "surface-container": "#eaedff",
+            "surface-container-high": "#e2e7ff",
+            "surface-container-highest": "#dae2fd",
+            "on-surface": "#131b2e",
+            "on-surface-variant": "#434655",
+            "outline": "#737686",
+            "outline-variant": "#c3c6d7",
+            "error": "#ba1a1a",
+            "error-container": "#ffdad6"
+          },
+          fontFamily: {
+            sans: ["Geist", "-apple-system", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+  
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body class="bg-background text-on-surface antialiased overflow-hidden select-none font-sans h-screen flex flex-col">
+
+  <!-- ================= AUTH VIEW (Logged Out State) ================= -->
+  <section id="auth-section" class="flex-1 flex items-center justify-center p-6 bg-gradient-to-br from-surface to-surface-container-low overflow-y-auto">
+    <div class="w-full max-w-md bg-surface-container-lowest border border-outline-variant/80 rounded-2xl p-8 shadow-xl flex flex-col gap-5">
+      <div class="text-center flex flex-col items-center">
+        <div class="w-12 h-12 rounded-xl bg-primary-container text-on-primary flex items-center justify-center shadow-md mb-3">
+          <span class="material-symbols-outlined text-[28px]">cloud</span>
+        </div>
+        <h1 class="text-2xl font-bold tracking-tight text-on-surface">CloudBox</h1>
+        <p class="text-sm text-outline mt-1">Personal Cloud Storage &amp; Secure Vault</p>
+        <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 mt-2 rounded-full text-xs font-mono bg-emerald-50 text-emerald-700 border border-emerald-200">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span> Local Emulator Suite
+        </span>
+      </div>
+
+      <div id="auth-alert" class="hidden p-3 rounded-lg text-xs border font-medium"></div>
+
+      <form id="auth-form" onsubmit="return false;" class="flex flex-col gap-3.5">
+        <div>
+          <label for="email" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Email Address</label>
+          <input id="email" type="email" placeholder="name@example.com" autocomplete="email" required
+            class="w-full h-10 px-3.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"/>
+        </div>
+        <div>
+          <label for="password" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Password</label>
+          <input id="password" type="password" placeholder="At least 6 characters" autocomplete="current-password" required
+            class="w-full h-10 px-3.5 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"/>
+        </div>
+
+        <div class="flex items-center justify-end">
+          <button id="btnForgot" type="button" class="text-xs text-primary hover:underline font-medium">Forgot password?</button>
+        </div>
+
+        <button id="btnLogin" type="submit"
+          class="w-full h-10 bg-primary-container text-on-primary hover:bg-primary font-medium rounded-lg text-sm transition-all shadow-sm active:scale-[0.99] flex items-center justify-center gap-2">
+          <span>Sign In</span>
+        </button>
+
+        <button id="btnSignup" type="button"
+          class="w-full h-10 bg-surface-container text-primary hover:bg-surface-container-high font-medium rounded-lg text-sm transition-all border border-outline-variant/60 flex items-center justify-center gap-2">
+          <span>Create Account</span>
+        </button>
+      </form>
+
+      <div class="relative flex py-1 items-center">
+        <div class="flex-grow border-t border-outline-variant"></div>
+        <span class="flex-shrink mx-4 text-xs font-mono text-outline uppercase">OR</span>
+        <div class="flex-grow border-t border-outline-variant"></div>
+      </div>
+
+      <button id="btnGoogle" type="button"
+        class="w-full h-10 bg-surface-container-lowest border border-outline-variant hover:bg-surface-container-low text-on-surface font-medium rounded-lg text-sm transition-all flex items-center justify-center gap-2 shadow-sm">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+          <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.68v3.05h3.88c2.27-2.09 3.665-5.17 3.665-9.17z"/>
+          <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.26 21.36 7.33 24 12 24z"/>
+          <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.18 0 9.99 0 12s.45 3.82 1.25 5.42l4.03-3.15z"/>
+          <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"/>
+        </svg>
+        <span>Continue with Google</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- ================= MAIN WORKSPACE (Logged In State) ================= -->
+  <div id="app-section" class="hidden h-screen w-full flex overflow-hidden">
+
+    <!-- LEFT SIDEBAR NAVIGATION RAIL -->
+    <aside class="w-64 h-full bg-surface-container-lowest border-r border-outline-variant flex flex-col justify-between p-4 flex-shrink-0 z-30">
+      <div class="flex flex-col gap-4">
+        <!-- Brand & Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-outline-variant/60">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-primary-container text-on-primary flex items-center justify-center shadow-sm">
+              <span class="material-symbols-outlined text-[20px]">cloud</span>
+            </div>
+            <div>
+              <span class="text-base font-semibold tracking-tight text-on-surface block leading-tight">CloudBox</span>
+              <span class="font-mono text-[11px] text-outline">v2.4.0</span>
+            </div>
+          </div>
+          <span class="font-mono text-[10px] px-2 py-0.5 rounded-full bg-surface-container text-primary font-medium border border-outline-variant/40">
+            Local
+          </span>
+        </div>
+
+        <!-- Navigation Section -->
+        <nav class="flex flex-col gap-1 mt-1">
+          <!-- Active Nav: My Files -->
+          <button id="nav-all-files" class="w-full flex items-center justify-between px-3 py-2 rounded-lg bg-surface-container-high text-primary font-medium text-sm transition-all text-left">
+            <div class="flex items-center gap-2.5">
+              <span class="material-symbols-outlined material-symbols-fill">folder</span>
+              <span>My Files</span>
+            </div>
+            <span id="nav-file-count" class="font-mono text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary font-medium">0</span>
+          </button>
+          
+          <button id="nav-photos" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant font-medium text-sm hover:text-on-surface hover:bg-surface-container-low transition-colors text-left">
+            <span class="material-symbols-outlined">photo_library</span>
+            <span>Photos &amp; Images</span>
+          </button>
+
+          <button id="nav-docs" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant font-medium text-sm hover:text-on-surface hover:bg-surface-container-low transition-colors text-left">
+            <span class="material-symbols-outlined">description</span>
+            <span>Documents</span>
+          </button>
+
+          <button id="nav-recent" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-on-surface-variant font-medium text-sm hover:text-on-surface hover:bg-surface-container-low transition-colors text-left">
+            <span class="material-symbols-outlined">schedule</span>
+            <span>Recent</span>
+          </button>
+        </nav>
+      </div>
+
+      <!-- Storage Usage Meter & Footer Profile -->
+      <div class="flex flex-col gap-4 pt-2">
+        <!-- Segmented Storage Card -->
+        <div class="p-3.5 rounded-xl bg-surface-container-low border border-outline-variant/60 shadow-sm flex flex-col gap-2">
+          <div class="flex items-center justify-between text-xs font-medium">
+            <span class="text-on-surface flex items-center gap-1">
+              <span class="material-symbols-outlined text-[16px] text-primary">cloud</span>
+              Storage
+            </span>
+            <span id="sidebar-quota-pct" class="font-mono text-primary font-semibold">0%</span>
+          </div>
+
+          <!-- Segmented linear meter bar -->
+          <div class="w-full bg-outline-variant/40 h-2 rounded-full overflow-hidden flex">
+            <div id="bar-img" class="bg-primary h-full transition-all duration-300" style="width: 0%;" title="Images"></div>
+            <div id="bar-doc" class="bg-secondary-container h-full transition-all duration-300" style="width: 0%;" title="Documents"></div>
+            <div id="bar-other" class="bg-tertiary-container h-full transition-all duration-300" style="width: 0%;" title="Others"></div>
+          </div>
+          <p id="sidebar-quota-text" class="font-mono text-[11px] text-on-surface-variant">0 MB of 500 MB used</p>
+
+          <!-- Category pills -->
+          <div class="flex flex-wrap gap-1 pt-1">
+            <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface-container text-on-surface flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-primary inline-block"></span> <span id="pill-img-size">0B</span> Img
+            </span>
+            <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface-container text-on-surface flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-secondary-container inline-block"></span> <span id="pill-doc-size">0B</span> Doc
+            </span>
+            <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface-container text-on-surface flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-tertiary-container inline-block"></span> <span id="pill-other-size">0B</span> Other
+            </span>
+          </div>
+        </div>
+
+        <!-- User Profile Row -->
+        <div class="flex items-center justify-between px-1 py-1 rounded-lg hover:bg-surface-container-low transition-colors">
+          <div class="flex items-center gap-2.5 overflow-hidden">
+            <div id="user-avatar" class="w-8 h-8 rounded-full bg-surface-variant border border-outline-variant flex items-center justify-center font-bold text-xs text-primary flex-shrink-0">
+              U
+            </div>
+            <div class="overflow-hidden">
+              <span id="user-display-name" class="text-xs font-semibold text-on-surface block truncate">User</span>
+              <span id="who" class="font-mono text-[10px] text-outline block truncate">user@example.com</span>
+            </div>
+          </div>
+          <button id="btnOut" class="p-1.5 text-on-surface-variant hover:text-error hover:bg-surface-container-high rounded-lg transition-colors" title="Sign out" aria-label="Sign out">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+          </button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CANVAS / WORKSPACE -->
+    <main class="flex-1 flex flex-col h-screen overflow-hidden bg-background">
+
+      <!-- TOP NAVIGATION BAR -->
+      <header class="h-14 w-full bg-surface-container-lowest border-b border-outline-variant flex items-center justify-between px-6 sticky top-0 z-20 flex-shrink-0">
+        <!-- Search Input -->
+        <div class="flex items-center gap-4 w-full max-w-md">
+          <div class="relative w-full flex items-center">
+            <span class="material-symbols-outlined absolute left-3 text-outline pointer-events-none text-[18px]">search</span>
+            <input id="search-input" type="text" placeholder="Search files in this folder..."
+              class="w-full h-9 pl-9 pr-14 bg-surface-container-low border border-outline-variant/80 rounded-lg text-xs text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"/>
+            <button id="search-clear" class="absolute right-9 text-outline hover:text-on-surface text-xs hidden p-1">✕</button>
+            <span class="absolute right-2.5 font-mono text-[10px] px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline-variant/60 select-none">
+              ⌘K
+            </span>
+          </div>
+        </div>
+
+        <!-- Center & Right Actions -->
+        <div class="flex items-center gap-4">
+          <!-- Emulator Status Indicator Pill -->
+          <div class="hidden lg:flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="font-mono text-xs font-medium">Emulator Active (Ports 9199/9099)</span>
+          </div>
+
+          <!-- Trailing Action Buttons -->
+          <div class="flex items-center gap-2.5">
+            <button id="btnFolder" class="h-9 px-3.5 rounded-lg bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low font-medium text-xs flex items-center gap-1.5 shadow-sm active:scale-[0.99] transition-all">
+              <span class="material-symbols-outlined text-[18px]">create_new_folder</span>
+              <span>New Folder</span>
+            </button>
+            <button id="btnUpload" class="h-9 px-4 rounded-lg bg-primary-container text-on-primary hover:bg-primary font-medium text-xs flex items-center gap-1.5 shadow-sm active:scale-[0.99] transition-all">
+              <span class="material-symbols-outlined text-[18px]">upload</span>
+              <span>Upload</span>
+            </button>
+            <input id="picker" type="file" multiple class="hidden" aria-label="Upload files"/>
+          </div>
+        </div>
+      </header>
+
+      <!-- CONTENT SCROLL AREA -->
+      <div class="flex-1 overflow-y-auto custom-scroll p-6 flex flex-col gap-6">
+
+        <!-- Subheader: Breadcrumb & Controls Bar -->
+        <section class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pb-3 border-b border-outline-variant/60">
+          <div>
+            <nav id="crumbs" class="flex items-center gap-1.5 text-on-surface-variant text-xs font-medium" aria-label="Breadcrumb navigation"></nav>
+            <p id="folder-stats-meta" class="font-mono text-[11px] text-outline mt-1">Ready • Serverless Cloud Storage</p>
+          </div>
+
+          <!-- View Controls & Sorters -->
+          <div class="flex items-center gap-3 self-end sm:self-auto flex-wrap">
+            <!-- Filter Chips -->
+            <div class="hidden md:flex items-center gap-1 mr-1">
+              <button class="filter-chip px-2.5 py-1 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/30" data-filter="all">All</button>
+              <button class="filter-chip px-2.5 py-1 rounded-full text-xs font-medium text-on-surface-variant hover:text-on-surface border border-outline-variant" data-filter="images">Images</button>
+              <button class="filter-chip px-2.5 py-1 rounded-full text-xs font-medium text-on-surface-variant hover:text-on-surface border border-outline-variant" data-filter="docs">Docs</button>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div class="flex items-center bg-surface-container-lowest border border-outline-variant rounded-lg px-2.5 py-1 text-xs gap-1.5 shadow-sm">
+              <span class="text-outline">Sort:</span>
+              <select id="sort-select" class="bg-transparent border-none text-xs font-medium focus:ring-0 p-0 cursor-pointer">
+                <option value="date-desc" selected>Date Modified (Newest)</option>
+                <option value="date-asc">Date Modified (Oldest)</option>
+                <option value="name-asc">Name (A → Z)</option>
+                <option value="name-desc">Name (Z → A)</option>
+                <option value="size-desc">Size (Largest)</option>
+                <option value="size-asc">Size (Smallest)</option>
+              </select>
+            </div>
+
+            <!-- View Switcher -->
+            <div class="flex items-center bg-surface-container-lowest border border-outline-variant rounded-lg p-0.5 shadow-sm">
+              <button id="view-mode-grid" class="p-1 rounded bg-surface-container-high text-primary" title="Bento Grid View">
+                <span class="material-symbols-outlined text-[18px]">grid_view</span>
+              </button>
+              <button id="view-mode-list" class="p-1 rounded text-outline hover:text-on-surface" title="Table List View">
+                <span class="material-symbols-outlined text-[18px]">view_list</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <!-- Active Uploading State Container -->
+        <section id="uploads" class="flex flex-col gap-2" aria-live="polite"></section>
+
+        <!-- Compact Drag & Drop Upload Zone -->
+        <section id="drop" class="border-2 border-dashed border-outline-variant hover:border-primary/60 rounded-xl bg-surface-container-lowest/60 hover:bg-surface-container-lowest p-6 transition-all duration-150 flex flex-col items-center justify-center text-center cursor-pointer group" tabindex="0">
+          <div class="w-10 h-10 rounded-full bg-surface-container group-hover:bg-primary/10 text-outline group-hover:text-primary flex items-center justify-center mb-2 transition-colors">
+            <span class="material-symbols-outlined text-[24px]">cloud_upload</span>
+          </div>
+          <p class="text-xs font-medium text-on-surface">
+            Drag &amp; drop files here to upload <span class="text-outline font-normal">(up to 50 MB)</span>
+          </p>
+          <p class="text-[11px] text-outline mt-0.5">
+            Automatic chunked resumable upload • Direct to Cloud Storage
+          </p>
+        </section>
+
+        <!-- FOLDERS SECTION -->
+        <section id="folders-section" class="flex flex-col gap-2.5">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-outline flex items-center gap-1.5">
+              <span>Folders</span>
+              <span id="folders-count" class="font-mono text-[11px] text-outline font-normal"></span>
+            </h2>
+          </div>
+          <div id="folders-container" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3"></div>
+        </section>
+
+        <!-- FILES SECTION -->
+        <section id="files-section" class="flex flex-col gap-2.5 flex-1">
+          <div class="flex items-center justify-between">
+            <h2 class="text-xs font-semibold uppercase tracking-wider text-outline flex items-center gap-1.5">
+              <span>Files</span>
+              <span id="files-count" class="font-mono text-[11px] text-outline font-normal"></span>
+            </h2>
+            <span class="font-mono text-[11px] text-outline">Owner-only isolated storage</span>
+          </div>
+
+          <!-- Dynamic Items Container (Grid or List rendered by app.js) -->
+          <div id="list" class="w-full"></div>
+        </section>
+
+        <!-- SECURITY & EMULATOR RULE ENFORCEMENT FOOTER -->
+        <footer class="mt-auto pt-4 pb-2 border-t border-outline-variant/60 flex flex-col sm:flex-row items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-primary inline-block"></span>
+            <span class="font-mono text-[11px] text-on-surface font-medium">Security Rules:</span>
+            <span class="font-mono text-[10px] text-outline bg-surface-container px-2 py-0.5 rounded border border-outline-variant/50">
+              match /users/{userId}/{allPaths=**} { allow read, delete: if uid == userId; allow write: if size &lt; 50MB; }
+            </span>
+          </div>
+          <div class="flex items-center gap-3 text-outline font-mono text-[11px]">
+            <span>Latency: <strong class="text-on-surface font-normal">Localhost &lt;5ms</strong></span>
+            <span>•</span>
+            <span>Streaming: <strong class="text-on-surface font-normal">Direct GCS Endpoint</strong></span>
+          </div>
+        </footer>
+
+      </div>
+    </main>
+
+    <!-- RIGHT FILE DETAIL DRAWER (Google Stitch Screen 2) -->
+    <aside id="file-detail-drawer" class="collapsed w-80 lg:w-96 h-full bg-surface-container-lowest border-l border-outline-variant flex flex-col justify-between flex-shrink-0 z-20 shadow-lg overflow-hidden">
+      <!-- Drawer Header -->
+      <div class="h-14 px-4 border-b border-outline-variant flex items-center justify-between flex-shrink-0 bg-surface">
+        <div class="flex items-center gap-2 min-w-0">
+          <span class="material-symbols-outlined text-primary text-[20px]">info</span>
+          <h2 id="drawer-title" class="text-xs font-semibold text-on-surface truncate">File Details</h2>
+        </div>
+        <div class="flex items-center gap-1 flex-shrink-0">
+          <button id="drawer-close" class="w-8 h-8 rounded-lg flex items-center justify-center text-outline hover:text-on-surface hover:bg-surface-container-low transition-colors" title="Close panel" aria-label="Close detail panel">
+            <span class="material-symbols-outlined text-[18px]">close</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Drawer Content -->
+      <div class="flex-1 overflow-y-auto custom-scroll p-4 flex flex-col gap-4">
+        <!-- Preview Card -->
+        <div class="rounded-xl overflow-hidden border border-outline-variant/60 bg-surface-container-low flex flex-col">
+          <div id="drawer-preview-wrap" class="w-full h-44 relative bg-surface-container overflow-hidden flex items-center justify-center">
+            <span id="drawer-preview-fallback" class="material-symbols-outlined text-[48px] text-outline">description</span>
+            <img id="drawer-preview-img" alt="File preview" class="w-full h-full object-cover hidden"/>
+          </div>
+          <div class="p-3 bg-surface-container-lowest flex items-center justify-between border-t border-outline-variant/40">
+            <div class="min-w-0 pr-2">
+              <p id="drawer-filename" class="text-xs font-semibold text-on-surface truncate">Filename.ext</p>
+              <p id="drawer-filesize" class="font-mono text-[10px] text-outline">0 KB</p>
+            </div>
+            <span class="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 border border-emerald-200 font-mono text-[10px] font-medium">Verified</span>
+          </div>
+        </div>
+
+        <!-- Quick Action Buttons -->
+        <div class="flex items-center gap-2">
+          <button id="drawer-btn-download" class="flex-1 h-9 rounded-lg bg-primary-container text-on-primary hover:bg-primary text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition-all">
+            <span class="material-symbols-outlined text-[17px]">download</span>
+            <span>Download</span>
+          </button>
+          <button id="drawer-btn-copy" class="flex-1 h-9 rounded-lg bg-surface-container-lowest border border-outline-variant text-on-surface hover:bg-surface-container-low text-xs font-medium flex items-center justify-center gap-1.5 shadow-sm active:scale-[0.99] transition-all">
+            <span class="material-symbols-outlined text-[17px]">link</span>
+            <span>Copy URL</span>
+          </button>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button id="drawer-btn-rename" class="flex-1 h-8 rounded-lg bg-surface-container-low border border-outline-variant/80 text-on-surface hover:bg-surface-container text-xs font-medium flex items-center justify-center gap-1.5 transition-all">
+            <span class="material-symbols-outlined text-[16px]">edit</span>
+            <span>Rename</span>
+          </button>
+          <button id="drawer-btn-preview" class="flex-1 h-8 rounded-lg bg-surface-container-low border border-outline-variant/80 text-on-surface hover:bg-surface-container text-xs font-medium flex items-center justify-center gap-1.5 transition-all">
+            <span class="material-symbols-outlined text-[16px]">open_in_full</span>
+            <span>Full Preview</span>
+          </button>
+        </div>
+
+        <!-- Metadata Table -->
+        <div class="flex flex-col gap-2">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-outline">File Information</h3>
+          <div class="rounded-xl bg-surface-container-low border border-outline-variant/60 p-3 flex flex-col gap-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-outline">Type</span>
+              <span id="drawer-meta-type" class="font-medium text-on-surface truncate max-w-[160px]">-</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-outline">Size</span>
+              <span id="drawer-meta-size" class="font-mono text-on-surface">-</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-outline">Path</span>
+              <span id="drawer-meta-path" class="font-mono text-[11px] text-primary truncate max-w-[180px]">-</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-outline">Modified</span>
+              <span id="drawer-meta-date" class="text-on-surface">-</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-outline">Owner</span>
+              <span id="drawer-meta-owner" class="font-mono text-[10px] text-outline truncate max-w-[160px]">-</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Storage & Security Card -->
+        <div class="flex flex-col gap-2">
+          <h3 class="text-xs font-semibold uppercase tracking-wider text-outline">Storage &amp; Security</h3>
+          <div class="rounded-xl bg-surface-container-low border border-outline-variant/60 p-3 flex flex-col gap-2 text-xs">
+            <div class="flex items-center justify-between">
+              <span class="text-outline">Bucket</span>
+              <span class="font-mono text-[11px] text-on-surface">demo-cloudbox.appspot.com</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <span class="text-outline">Access Policy</span>
+              <span class="font-mono text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary font-medium border border-primary/20">Private (Owner rules)</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Delete Action -->
+        <button id="drawer-btn-delete" class="w-full h-9 rounded-lg border border-red-200 text-error hover:bg-error-container/20 text-xs font-medium flex items-center justify-center gap-1.5 transition-colors mt-1">
+          <span class="material-symbols-outlined text-[17px]">delete</span>
+          <span>Delete File Permanently</span>
+        </button>
+      </div>
+    </aside>
+
+  </div>
+
+  <!-- ================= ACCESSIBLE MODALS ================= -->
+
+  <!-- 0. Rename Modal -->
+  <div id="modal-rename" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-rename-title">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-outline-variant/60 mb-4">
+        <h3 id="modal-rename-title" class="text-base font-bold text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[20px]">edit</span>
+          Rename File
+        </h3>
+        <button class="text-outline hover:text-on-surface" data-modal-close="modal-rename" aria-label="Close">✕</button>
+      </div>
+      <form id="form-rename" onsubmit="return false;" class="flex flex-col gap-4">
+        <div>
+          <label for="rename-input" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">New Filename</label>
+          <input id="rename-input" type="text" maxlength="100" autocomplete="off" required
+            class="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"/>
+          <p class="text-[11px] text-outline mt-1">Enter a new name including the extension.</p>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/60">
+          <button type="button" class="px-4 py-2 rounded-lg border border-outline-variant text-xs font-medium text-on-surface hover:bg-surface-container-low transition-colors" data-modal-close="modal-rename">Cancel</button>
+          <button type="submit" id="btn-rename-confirm" class="px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary text-xs font-medium shadow-sm transition-all">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- 1. New Folder Modal -->
+  <div id="modal-folder" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-folder-title">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-outline-variant/60 mb-4">
+        <h3 id="modal-folder-title" class="text-base font-bold text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[20px]">create_new_folder</span>
+          New Folder
+        </h3>
+        <button class="text-outline hover:text-on-surface" data-modal-close="modal-folder" aria-label="Close">✕</button>
+      </div>
+      <form id="form-new-folder" onsubmit="return false;" class="flex flex-col gap-4">
+        <div>
+          <label for="folder-name-input" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1.5">Folder Name</label>
+          <input id="folder-name-input" type="text" placeholder="e.g. Project Documents, Photos, Reports" maxlength="80" autocomplete="off" required
+            class="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"/>
+          <p class="text-[11px] text-outline mt-1">Stored as virtual prefix with 0-byte .keep marker.</p>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/60">
+          <button type="button" class="px-4 py-2 rounded-lg border border-outline-variant text-xs font-medium text-on-surface hover:bg-surface-container-low transition-colors" data-modal-close="modal-folder">Cancel</button>
+          <button type="submit" id="btn-create-folder-confirm" class="px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary text-xs font-medium shadow-sm transition-all">Create Folder</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. Delete Confirmation Modal -->
+  <div id="modal-delete" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-delete-title">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-outline-variant/60 mb-3">
+        <h3 id="modal-delete-title" class="text-base font-bold text-on-surface flex items-center gap-2 text-error">
+          <span class="material-symbols-outlined text-[20px]">delete_forever</span>
+          Confirm Deletion
+        </h3>
+        <button class="text-outline hover:text-on-surface" data-modal-close="modal-delete" aria-label="Close">✕</button>
+      </div>
+      <div class="flex flex-col gap-2 mb-4 text-xs text-on-surface-variant">
+        <p id="modal-delete-msg">Are you sure you want to delete this item?</p>
+        <p id="modal-delete-submsg" class="text-error font-medium"></p>
+      </div>
+      <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/60">
+        <button type="button" class="px-4 py-2 rounded-lg border border-outline-variant text-xs font-medium text-on-surface hover:bg-surface-container-low transition-colors" data-modal-close="modal-delete">Cancel</button>
+        <button type="button" id="btn-delete-confirm" class="px-4 py-2 rounded-lg bg-error text-on-primary hover:bg-red-700 text-xs font-medium shadow-sm transition-all">Delete Permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Password Reset Modal -->
+  <div id="modal-reset" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modal-reset-title">
+    <div class="modal-dialog">
+      <div class="flex items-center justify-between pb-3 border-b border-outline-variant/60 mb-3">
+        <h3 id="modal-reset-title" class="text-base font-bold text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-primary text-[20px]">lock_reset</span>
+          Reset Password
+        </h3>
+        <button class="text-outline hover:text-on-surface" data-modal-close="modal-reset" aria-label="Close">✕</button>
+      </div>
+      <form id="form-reset-password" onsubmit="return false;" class="flex flex-col gap-3">
+        <p class="text-xs text-on-surface-variant">Enter your registered email address. A password reset link will be sent or generated in the emulator.</p>
+        <div>
+          <label for="reset-email-input" class="block text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-1">Account Email</label>
+          <input id="reset-email-input" type="email" placeholder="name@example.com" autocomplete="email" required
+            class="w-full h-10 px-3 bg-surface-container-lowest border border-outline-variant rounded-lg text-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20"/>
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/60">
+          <button type="button" class="px-4 py-2 rounded-lg border border-outline-variant text-xs font-medium text-on-surface hover:bg-surface-container-low transition-colors" data-modal-close="modal-reset">Cancel</button>
+          <button type="submit" id="btn-send-reset" class="px-4 py-2 rounded-lg bg-primary-container text-on-primary hover:bg-primary text-xs font-medium shadow-sm transition-all">Send Reset Link</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. Image Lightbox Modal -->
+  <div id="modal-lightbox" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="lightbox-title">
+    <div class="modal-dialog max-w-3xl p-4">
+      <div class="flex items-center justify-between pb-2 border-b border-outline-variant/60 mb-3">
+        <h3 id="lightbox-title" class="text-sm font-semibold text-on-surface truncate max-w-lg">Preview</h3>
+        <button class="text-outline hover:text-on-surface" data-modal-close="modal-lightbox" aria-label="Close">✕</button>
+      </div>
+      <div class="w-full max-h-[65vh] bg-black rounded-lg overflow-hidden flex items-center justify-center mb-3">
+        <img id="lightbox-img" src="" alt="Lightbox image" class="max-w-full max-h-[65vh] object-contain"/>
+      </div>
+      <div class="flex items-center justify-between pt-1">
+        <span id="lightbox-meta" class="font-mono text-xs text-outline"></span>
+        <button id="lightbox-dl" class="px-4 py-1.5 rounded-lg bg-primary-container text-on-primary hover:bg-primary text-xs font-medium flex items-center gap-1.5 transition-all">
+          <span class="material-symbols-outlined text-[16px]">download</span>
+          <span>Download</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Alert Container -->
+  <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Application Logic -->
+  <script type="module" src="app.js"></script>
+</body>
+</html>
